@@ -1,22 +1,28 @@
+const express = require('express');
+const app = express();
+require('dotenv').config();
 const sequelize = require('./config/database');
+const userRoutes = require('./routes/userRoutes');
 const User = require('./models/user');
 
-async function connectAndSync() {
+app.use(express.json());
+app.use('/users', userRoutes);
+
+// Sync and start server
+async function start() {
   try {
     await sequelize.authenticate();
     console.log('✅ Connected to PostgreSQL');
 
-    await sequelize.sync({ force: true }); // creates the table, drops if exists
-    console.log('✅ User table created');
+    await sequelize.sync(); // set { force: true } to reset tables
+    console.log('✅ Tables synced');
 
-    // Optional: Insert sample data
-    await User.create({ name: 'Virat Kohli', email: 'virat.kohli@example.com' });
-    console.log('✅ Sample user inserted');
-  } catch (error) {
-    console.error('❌ Connection error:', error);
-  } finally {
-    await sequelize.close();
+    app.listen(process.env.PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${process.env.PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Error starting server:', err);
   }
 }
 
-connectAndSync();
+start();
